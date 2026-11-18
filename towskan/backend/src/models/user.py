@@ -14,6 +14,9 @@ class Usuario(db.Model):
     google_id = db.Column(db.String(255), nullable=True, unique=True)
     fecha_registro = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
+    # Relación 1:N con pedidos
+    pedidos = db.relationship("Pedido", back_populates="usuario", lazy="dynamic", cascade="all, delete-orphan")
+
     def to_dict(self):
         """Retorna la representación en diccionario sanitizada (sin password)."""
         return {

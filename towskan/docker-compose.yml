@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: towskan_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_towskan_2026
+      MYSQL_DATABASE: towskan_db
+      MYSQL_USER: towskan_user
+      MYSQL_PASSWORD: towskan_secure_pass_2026
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/towskan_db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: towskan_backend
+    restart: always
+    environment:
+      PORT: 5000
+      FLASK_ENV: production
+      DATABASE_URL: mysql+pymysql://towskan_user:towskan_secure_pass_2026@db:3306/towskan_db
+      CORS_ORIGINS: http://localhost:3000,https://towskan.vercel.app
+      SECRET_KEY: towskan_prod_ultra_secure_jwt_key_2026
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: towskan_frontend
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:5000/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

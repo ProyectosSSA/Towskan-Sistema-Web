@@ -29,3 +29,11 @@ class Config:
         for origin in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
         if origin.strip()
     ]
+
+    # Parámetros del Restaurante (Fase 4 - Notificaciones y Facturación)
+    WHATSAPP_PHONE = os.getenv("WHATSAPP_PHONE", "573001234567")
+    RESTAURANTE_NIT = os.getenv("RESTAURANTE_NIT", "901.834.123-5")
+    RESTAURANTE_NOMBRE = "TOWSKAN GOURMET EXPRESS"
+    RESTAURANTE_DIRECCION = "Calle 16 #9-45, Valledupar, Cesar"
+    MONTO_MINIMO_DOMICILIO = 15000.00
+    MONTO_MAXIMO_PEDIDO = 1000000.00

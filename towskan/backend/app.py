@@ -6,6 +6,11 @@ from src.config.settings import Config
 from src.config.database import init_db
 from src.errors.handlers import register_error_handlers
 from src.routes.auth_routes import auth_bp
+from src.routes.category_routes import category_bp
+from src.routes.product_routes import product_bp
+from src.routes.order_routes import order_bp
+from src.routes.payment_routes import payment_bp
+from src.services.product_service import ProductService
 
 
 def create_app():
@@ -34,19 +39,30 @@ def create_app():
     app.config["SWAGGER"] = {
         "title": "Towskan Web API",
         "uiversion": 3,
-        "version": "1.0.0",
-        "description": "API REST para el Sistema Web Interactivo y Gestión de Pedidos Towskan"
+        "version": "2.0.0",
+        "description": "API REST para el Sistema Web Interactivo y Gestión de Pedidos Towskan - Fase 2 Core CRUD"
     }
     Swagger(app, config=swagger_config)
 
     # Inicializar Base de Datos (SQLAlchemy)
     init_db(app)
 
+    # Sembrado inicial de catálogo si la BD está limpia
+    with app.app_context():
+        try:
+            ProductService.seed_default_menu()
+        except Exception as seed_err:
+            app.logger.warning(f"Aviso al sembrar menú inicial: {seed_err}")
+
     # Registrar Manejadores Centralizados de Error (RNF-02, RNF-17)
     register_error_handlers(app)
 
     # Registrar Blueprints / Rutas
     app.register_blueprint(auth_bp)
+    app.register_blueprint(category_bp)
+    app.register_blueprint(product_bp)
+    app.register_blueprint(order_bp)
+    app.register_blueprint(payment_bp)
 
     @app.route("/api/health", methods=["GET"])
     def health_check():
@@ -54,7 +70,8 @@ def create_app():
             "success": True,
             "status": "operational",
             "service": "Towskan Backend API",
-            "version": "1.0.0"
+            "phase": "Fase 2 - Entidades Core y CRUD Principal",
+            "version": "2.0.0"
         }), 200
 
     return app

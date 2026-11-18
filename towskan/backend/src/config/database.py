@@ -7,6 +7,6 @@ def init_db(app):
     """Inicializa la extensión SQLAlchemy y crea las tablas si no existen."""
     db.init_app(app)
     with app.app_context():
-        # Importar modelos para que SQLAlchemy los reconozca en metadata
-        from src.models import user
+        # Importar todos los modelos del DER para que SQLAlchemy cree las 6 tablas
+        import src.models  # noqa: F401
         db.create_all()
