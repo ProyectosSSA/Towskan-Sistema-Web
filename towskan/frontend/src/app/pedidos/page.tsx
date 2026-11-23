@@ -55,6 +55,35 @@ export default function OrdersPage() {
     fetchOrders();
   };
 
+  const resolveProductImage = (img?: string | null, name?: string | null) => {
+    if (img && img.trim()) return img;
+    if (!name) return null;
+    const n = name.toLowerCase();
+    if (n.includes("clasica") || n.includes("master")) return "/images/menu/towskan-clasica.jpg";
+    if (n.includes("doble queso") || n.includes("bacon")) return "/images/menu/doble-queso-bacon.jpg";
+    if (n.includes("smoked") || n.includes("bbq")) return "/images/menu/smoked-bbq.jpg";
+    if (n.includes("chicken") || n.includes("volcano")) return "/images/menu/chicken-crispy.jpg";
+    if (n.includes("papas rusticas") || n.includes("rústicas") || n.includes("papas")) return "/images/menu/papas-rusticas.jpg";
+    if (n.includes("salchipapa")) return "/images/menu/salchipapas.jpg";
+    if (n.includes("aros")) return "/images/menu/aros-cebolla.jpg";
+    if (n.includes("oreo")) return "/images/menu/malteada-oreo.jpg";
+    if (n.includes("arequipe")) return "/images/menu/malteada-arequipe.jpg";
+    if (n.includes("limonada") || n.includes("coco")) return "/images/menu/limonada-coco.jpg";
+    if (n.includes("gaseosa") || n.includes("coca")) return "/images/menu/gaseosa.jpg";
+    if (n.includes("salsa towskan") || n.includes("secreta")) return "/images/menu/salsa-towskan.jpg";
+    if (n.includes("cheddar")) return "/images/menu/cheddar-dip.jpg";
+    return null;
+  };
+
+  const getProductEmoji = (nombre: string) => {
+    const lower = nombre.toLowerCase();
+    if (lower.includes("hamburguesa") || lower.includes("angus") || lower.includes("bacon") || lower.includes("bbq") || lower.includes("chicken")) return "🍔";
+    if (lower.includes("acompañamiento") || lower.includes("papa") || lower.includes("salchipapa") || lower.includes("aros")) return "🍟";
+    if (lower.includes("bebida") || lower.includes("malteada") || lower.includes("limonada") || lower.includes("gaseosa")) return "🥤";
+    if (lower.includes("salsa") || lower.includes("dip") || lower.includes("cheddar")) return "🥫";
+    return "🍽️";
+  };
+
   const getStatusBadge = (estado: OrderStatus) => {
     switch (estado) {
       case "pendiente":
@@ -219,13 +248,37 @@ export default function OrdersPage() {
                 </div>
 
                 {/* Lista de productos pedidos */}
-                <div className="space-y-2 text-xs">
+                <div className="space-y-2.5 text-xs">
                   {order.detalles?.map((det) => (
                     <div key={det.id} className="flex justify-between items-center text-gray-700">
-                      <span className="font-medium">
-                        <strong>{det.cantidad}x</strong> {det.producto_nombre || `Producto #${det.producto_id}`}
-                      </span>
-                      <span className="font-semibold text-gray-900">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-towskan-cream-50 flex items-center justify-center shrink-0 overflow-hidden relative border border-gray-100">
+                          {resolveProductImage(det.producto_imagen, det.producto_nombre) ? (
+                            <img
+                              src={resolveProductImage(det.producto_imagen, det.producto_nombre)!}
+                              alt={det.producto_nombre || "Plato"}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                                if (fallback) fallback.style.display = "flex";
+                              }}
+                            />
+                          ) : null}
+                          <span
+                            className="text-sm flex items-center justify-center w-full h-full"
+                            style={{
+                              display: resolveProductImage(det.producto_imagen, det.producto_nombre) ? "none" : "flex",
+                            }}
+                          >
+                            {getProductEmoji(det.producto_nombre || "")}
+                          </span>
+                        </div>
+                        <span className="font-medium truncate">
+                          <strong>{det.cantidad}x</strong> {det.producto_nombre || `Producto #${det.producto_id}`}
+                        </span>
+                      </div>
+                      <span className="font-semibold text-gray-900 shrink-0">
                         ${det.subtotal.toLocaleString("es-CO")} COP
                       </span>
                     </div>
