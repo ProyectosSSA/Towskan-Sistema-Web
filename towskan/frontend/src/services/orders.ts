@@ -219,9 +219,72 @@ export const orderService = {
       const envio = payload.tipo_entrega === "domicilio" ? 5000 : 0;
       const total = subtotal + impuestos + envio;
 
-      // 4. Usuario activo
+      // 4. Asegurar usuario válido en la base de datos (evita error de FK pedidos_usuario_id_fkey)
+      let usuario_id: number = 2;
       const user = authService.getStoredUser();
-      const usuario_id = user?.id || 2;
+
+      if (user?.email) {
+        // Buscar el usuario por email en la tabla 'usuarios'
+        const { data: existingUser } = await supabase
+          .from("usuarios")
+          .select("id, nombre, email")
+          .eq("email", user.email)
+          .maybeSingle();
+
+        if (existingUser) {
+          usuario_id = existingUser.id;
+        } else {
+          // Si no existe aún en la tabla 'usuarios', crearlo atómicamente
+          const { data: newUser } = await supabase
+            .from("usuarios")
+            .insert([
+              {
+                nombre: user.nombre || "Cliente Towskan",
+                email: user.email,
+                proveedor: user.proveedor || "local",
+              },
+            ])
+            .select("id")
+            .maybeSingle();
+
+          if (newUser) {
+            usuario_id = newUser.id;
+          }
+        }
+
+        // Sincronizar el id en el almacenamiento local si cambió
+        if (user.id !== usuario_id) {
+          user.id = usuario_id;
+          localStorage.setItem("towskan_user", JSON.stringify(user));
+        }
+      } else if (user?.id) {
+        // Si tiene un id numérico, verificar que exista en la tabla
+        const { data: checkUser } = await supabase
+          .from("usuarios")
+          .select("id")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (checkUser) {
+          usuario_id = checkUser.id;
+        } else {
+          const { data: fallbackUser } = await supabase
+            .from("usuarios")
+            .select("id")
+            .order("id", { ascending: true })
+            .limit(1)
+            .maybeSingle();
+          if (fallbackUser) usuario_id = fallbackUser.id;
+        }
+      } else {
+        const { data: fallbackUser } = await supabase
+          .from("usuarios")
+          .select("id")
+          .order("id", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (fallbackUser) usuario_id = fallbackUser.id;
+      }
 
       // 5. Insertar Cabecera de Pedido en Supabase
       const { data: orderData, error: orderErr } = await supabase

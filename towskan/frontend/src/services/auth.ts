@@ -90,7 +90,7 @@ export const authService = {
       });
 
       // 2. Si es exitoso o es una cuenta de prueba sembrada
-      const { data: userRow } = await supabase
+      let { data: userRow } = await supabase
         .from("usuarios")
         .select("*")
         .eq("email", email)
@@ -98,6 +98,26 @@ export const authService = {
 
       if (authError && !userRow) {
         return { success: false, error: authError.message };
+      }
+
+      // Si el usuario existe en Supabase Auth pero no en la tabla 'usuarios', crearlo ahora
+      if (!userRow && authData?.user) {
+        const nombreMeta = authData.user.user_metadata?.nombre || email.split("@")[0] || "Cliente Towskan";
+        const { data: newUserRow } = await supabase
+          .from("usuarios")
+          .insert([
+            {
+              nombre: nombreMeta,
+              email: email,
+              proveedor: "local",
+            },
+          ])
+          .select()
+          .maybeSingle();
+
+        if (newUserRow) {
+          userRow = newUserRow;
+        }
       }
 
       const user: User = userRow
