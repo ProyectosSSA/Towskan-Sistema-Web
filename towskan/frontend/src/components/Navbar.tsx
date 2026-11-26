@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { authService, User } from "@/services/auth";
 import { useCart } from "@/context/CartContext";
-import { ShoppingBag, Menu, X, User as UserIcon, LogOut, Receipt } from "lucide-react";
+import { ShoppingBag, Menu, X, User as UserIcon, LogOut, Receipt, Shield } from "lucide-react";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -60,6 +60,17 @@ export function Navbar() {
               </Link>
             );
           })}
+          {currentUser?.email === "admin@towskan.com" && (
+            <Link
+              href="/admin"
+              className={`inline-flex items-center gap-1.5 transition hover:text-towskan-orange-500 ${
+                pathname === "/admin" ? "text-towskan-orange-500 font-extrabold" : "text-gray-600"
+              }`}
+            >
+              <Shield className="w-3.5 h-3.5" />
+              Admin
+            </Link>
+          )}
         </nav>
 
         {/* Acciones derechas (Carrito + Usuario) */}
@@ -151,6 +162,23 @@ export function Navbar() {
                 </Link>
               );
             })}
+            {currentUser?.email === "admin@towskan.com" && (
+              <Link
+                href="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`px-3 py-3 rounded-xl text-sm font-bold transition flex items-center justify-between ${
+                  pathname === "/admin"
+                    ? "bg-towskan-orange-50 text-towskan-orange-600 font-extrabold"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-towskan-orange-500" />
+                  Panel Admin
+                </span>
+                {pathname === "/admin" && <span className="w-2 h-2 rounded-full bg-towskan-orange-500" />}
+              </Link>
+            )}
           </nav>
 
           <div className="pt-3 border-t border-gray-100 flex flex-col gap-2 sm:hidden">
