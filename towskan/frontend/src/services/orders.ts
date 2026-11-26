@@ -145,7 +145,7 @@ export const orderService = {
       }
 
       // Reglas Financieras Oficiales Towskan: 8% INC + Envío $5.000 COP
-      const impuestos = Math.round(subtotal * 0.08 * 100) / 100;
+      const impuestos = Math.round(subtotal * 0.08);
       const envio = payload.tipo_entrega === "domicilio" ? 5000 : 0;
       const total = subtotal + impuestos + envio;
 
@@ -215,7 +215,7 @@ export const orderService = {
         };
       }
 
-      const impuestos = Math.round(subtotal * 0.08 * 100) / 100;
+      const impuestos = Math.round(subtotal * 0.08);
       const envio = payload.tipo_entrega === "domicilio" ? 5000 : 0;
       const total = subtotal + impuestos + envio;
 
@@ -375,9 +375,26 @@ export const orderService = {
   async getMyOrders(): Promise<ApiResponse<Order[]>> {
     try {
       const user = authService.getStoredUser();
-      const userId = user?.id;
+      if (!user) {
+        return { success: false, error: "Debes iniciar sesión para consultar tus pedidos." };
+      }
 
-      let query = supabase
+      let userId = user.id;
+      if (user.email) {
+        const { data: userRow, error: userErr } = await supabase
+          .from("usuarios")
+          .select("id")
+          .eq("email", user.email)
+          .maybeSingle();
+        if (!userErr) {
+          if (!userRow?.id) {
+            return { success: true, data: [] };
+          }
+          userId = userRow.id;
+        }
+      }
+
+      const { data, error } = await supabase
         .from("pedidos")
         .select(`
           id,
@@ -400,13 +417,9 @@ export const orderService = {
           ),
           pagos (id, metodo, proveedor, estado, fecha_pago)
         `)
+        .eq("usuario_id", userId)
         .order("id", { ascending: false });
 
-      if (userId) {
-        query = query.eq("usuario_id", userId);
-      }
-
-      const { data, error } = await query;
       if (error) return { success: false, error: error.message };
 
       const orders: Order[] = (data || []).map((o: any) => ({
@@ -568,7 +581,7 @@ export const orderService = {
 
   async updateStatus(id: number, estado: OrderStatus): Promise<ApiResponse<Order>> {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("pedidos")
         .update({ estado })
         .eq("id", id)
@@ -582,7 +595,7 @@ export const orderService = {
     }
   },
 
-  async cancel(id: number, razon?: string): Promise<ApiResponse<Order>> {
+  async cancel(id: number, _razon?: string): Promise<ApiResponse<Order>> {
     try {
       const current = await this.getById(id);
       if (!current.success || !current.data) {
@@ -596,7 +609,7 @@ export const orderService = {
         };
       }
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("pedidos")
         .update({ estado: "cancelado" })
         .eq("id", id)

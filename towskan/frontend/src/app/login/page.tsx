@@ -11,10 +11,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [infoMsg, setInfoMsg] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+    setInfoMsg(null);
     setLoading(true);
 
     try {
@@ -32,39 +34,45 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-towskan-cream-50">
+    <div className="min-h-[calc(100dvh-4.5rem)] flex items-center justify-center p-4 sm:p-6 bg-towskan-cream-50">
       <div className="w-full max-w-4xl bg-white rounded-3xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-2 border border-gray-100">
         
         {/* Panel Izquierdo de Marca (diseño fiel a -towskan.pdf) */}
-        <div className="bg-gradient-to-br from-towskan-orange-500 to-towskan-orange-600 p-8 md:p-12 text-white flex flex-col justify-between">
-          <Link href="/" className="inline-flex items-center gap-2 text-white/90 hover:text-white text-sm font-semibold mb-8">
+        <div className="bg-gradient-to-br from-towskan-orange-500 to-towskan-orange-600 p-6 sm:p-8 md:p-12 text-white flex flex-col justify-between">
+          <Link href="/" className="inline-flex items-center gap-2 text-white/90 hover:text-white text-xs sm:text-sm font-semibold mb-4 md:mb-8">
             ← Volver al inicio
           </Link>
           <div>
-            <div className="flex items-center gap-2 mb-6">
-              <span className="text-3xl">🔥</span>
-              <span className="text-3xl font-black tracking-tight">Towskan</span>
+            <div className="flex items-center gap-2 mb-3 md:mb-6">
+              <span className="text-2xl sm:text-3xl">🔥</span>
+              <span className="text-2xl sm:text-3xl font-black tracking-tight">Towskan</span>
             </div>
-            <h2 className="text-2xl md:text-3xl font-black leading-snug mb-4">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-black leading-snug mb-2 md:mb-4">
               Bienvenido de nuevo
             </h2>
-            <p className="text-white/80 text-sm leading-relaxed">
+            <p className="text-white/85 text-xs sm:text-sm leading-relaxed">
               Inicia sesión para pedir tus hamburguesas favoritas, acumular puntos y recibir tus pedidos a la velocidad de la luz.
             </p>
           </div>
-          <div className="text-xs text-white/60 pt-6 border-t border-white/20 mt-8">
+          <div className="hidden md:block text-xs text-white/60 pt-6 border-t border-white/20 mt-8">
             Towskan Web System • SENA ADSO
           </div>
         </div>
 
         {/* Panel Derecho: Formulario */}
-        <div className="p-8 md:p-12 flex flex-col justify-center">
-          <h1 className="text-2xl font-black text-gray-900 mb-1">Iniciar sesión</h1>
-          <p className="text-xs text-gray-500 mb-6">Ingresa tus datos para continuar</p>
+        <div className="p-6 sm:p-8 md:p-12 flex flex-col justify-center">
+          <h1 className="text-xl sm:text-2xl font-black text-gray-900 mb-1">Iniciar sesión</h1>
+          <p className="text-xs text-gray-500 mb-5 sm:mb-6">Ingresa tus datos para continuar</p>
 
           {errorMsg && (
             <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-semibold">
               ⚠️ {errorMsg}
+            </div>
+          )}
+
+          {infoMsg && (
+            <div className="mb-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold">
+              ℹ️ {infoMsg}
             </div>
           )}
 
@@ -79,7 +87,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="ejemplo@correo.com"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 focus:border-transparent transition"
               />
             </div>
 
@@ -93,18 +101,24 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Ingresa tu contraseña"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 focus:border-transparent transition"
               />
             </div>
 
-            <div className="flex items-center justify-between text-xs text-gray-500">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" className="rounded border-gray-300 text-towskan-orange-500 focus:ring-towskan-orange-500" />
                 <span>Recordarme</span>
               </label>
-              <span className="text-towskan-orange-500 hover:underline cursor-pointer">
+              <button
+                type="button"
+                onClick={() =>
+                  setInfoMsg("Para recuperar tu contraseña, escríbenos desde la sección de Soporte o al WhatsApp +57 300 123 4567.")
+                }
+                className="text-towskan-orange-500 hover:underline cursor-pointer"
+              >
                 ¿Olvidaste tu contraseña?
-              </span>
+              </button>
             </div>
 
             <button
@@ -125,7 +139,9 @@ export default function LoginPage() {
 
           <button
             type="button"
-            onClick={() => alert("La integración con Google OAuth está configurada en backend y requiere llaves de Google Cloud.")}
+            onClick={() =>
+              setInfoMsg("La integración con Google OAuth está configurada en backend y requiere llaves de Google Cloud.")
+            }
             className="w-full py-3 px-4 border border-gray-200 hover:bg-gray-50 rounded-xl text-xs font-bold text-gray-700 flex items-center justify-center gap-2 transition"
           >
             <span>🌐</span> Continuar con Google

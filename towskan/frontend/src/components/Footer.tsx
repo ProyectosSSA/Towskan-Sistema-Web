@@ -4,7 +4,7 @@ import { Phone, MapPin, Clock, ShieldCheck } from "lucide-react";
 export function Footer() {
   return (
     <footer className="w-full border-t border-gray-100 bg-white text-gray-600 text-xs">
-      <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         
         {/* Columna 1: Marca */}
         <div className="space-y-3">
@@ -89,7 +89,7 @@ export function Footer() {
 
       </div>
 
-      <div className="border-t border-gray-100 py-4 text-center text-[11px] text-gray-400">
+      <div className="border-t border-gray-100 py-4 px-4 text-center text-[11px] text-gray-400">
         © 2026 Towskan Sistema Web. Todos los derechos reservados.
       </div>
     </footer>

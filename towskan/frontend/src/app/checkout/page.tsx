@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 import { authService, User } from "@/services/auth";
-import { orderService, PaymentMethod, DeliveryType } from "@/services/orders";
+import { orderService, PaymentMethod } from "@/services/orders";
 import {
   Bike,
   ShoppingBag,
@@ -21,7 +20,6 @@ import {
 } from "lucide-react";
 
 export default function CheckoutPage() {
-  const router = useRouter();
   const {
     items,
     totalItems,
@@ -66,17 +64,17 @@ export default function CheckoutPage() {
   // Si el carrito está vacío y no hay orden recién creada
   if (items.length === 0 && !orderSuccess) {
     return (
-      <div className="max-w-2xl mx-auto px-6 py-20 text-center">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-14 sm:py-20 text-center">
         <div className="w-16 h-16 rounded-full bg-towskan-orange-50 text-towskan-orange-500 flex items-center justify-center mx-auto mb-4">
           <ShoppingBag className="w-8 h-8" />
         </div>
-        <h1 className="text-2xl font-black text-gray-900 mb-2">No tienes productos en el carrito</h1>
+        <h1 className="text-xl sm:text-2xl font-black text-gray-900 mb-2">No tienes productos en el carrito</h1>
         <p className="text-xs text-gray-500 mb-8 max-w-sm mx-auto">
           Para realizar un pedido, primero debes agregar tus platos favoritos desde el menú.
         </p>
         <Link
           href="/menu"
-          className="px-6 py-3 bg-towskan-orange-500 hover:bg-towskan-orange-600 text-white font-bold text-xs rounded-xl shadow-md transition"
+          className="inline-block px-6 py-3 bg-towskan-orange-500 hover:bg-towskan-orange-600 text-white font-bold text-xs rounded-xl shadow-md transition"
         >
           Ir al Menú
         </Link>
@@ -96,17 +94,17 @@ export default function CheckoutPage() {
     )}`;
 
     return (
-      <div className="max-w-xl mx-auto px-6 py-16 text-center">
-        <div className="p-8 bg-white rounded-3xl border border-gray-100 shadow-xl space-y-6">
-          <div className="w-20 h-20 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto">
-            <CheckCircle2 className="w-10 h-10" />
+      <div className="max-w-xl mx-auto px-4 sm:px-6 py-8 sm:py-16 text-center">
+        <div className="p-5 sm:p-8 bg-white rounded-3xl border border-gray-100 shadow-xl space-y-5 sm:space-y-6">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-8 h-8 sm:w-10 sm:h-10" />
           </div>
 
           <div>
             <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-black uppercase tracking-wider">
               ¡Pedido Confirmado!
             </span>
-            <h1 className="text-3xl font-black text-gray-900 mt-3 mb-1">
+            <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mt-3 mb-1">
               Orden #{orderSuccess.id}
             </h1>
             <p className="text-xs text-gray-500">
@@ -115,21 +113,21 @@ export default function CheckoutPage() {
           </div>
 
           <div className="p-4 bg-towskan-cream-50 rounded-2xl border border-gray-100 text-left space-y-2 text-xs">
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-2">
               <span className="text-gray-500">Modalidad:</span>
               <span className="font-bold uppercase text-gray-800">{orderSuccess.tipo_entrega}</span>
             </div>
             {orderSuccess.numero_mesa && (
-              <div className="flex justify-between">
+              <div className="flex justify-between gap-2">
                 <span className="text-gray-500">Mesa:</span>
                 <span className="font-bold text-gray-800">{orderSuccess.numero_mesa}</span>
               </div>
             )}
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-2">
               <span className="text-gray-500">Estado:</span>
               <span className="font-bold text-towskan-orange-600 uppercase">{orderSuccess.estado}</span>
             </div>
-            <div className="flex justify-between pt-2 border-t border-gray-200 text-sm font-black text-gray-900">
+            <div className="flex justify-between gap-2 pt-2 border-t border-gray-200 text-sm font-black text-gray-900">
               <span>Total a Cancelar:</span>
               <span>${orderSuccess.total.toLocaleString("es-CO")} COP</span>
             </div>
@@ -140,7 +138,7 @@ export default function CheckoutPage() {
             href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-4 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
+            className="w-full py-3.5 sm:py-4 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs sm:text-sm rounded-2xl shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
           >
             <span>📲 Enviar Pedido al WhatsApp de Cocina</span>
           </a>
@@ -148,13 +146,13 @@ export default function CheckoutPage() {
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <Link
               href={`/pedidos/${orderSuccess.id}`}
-              className="flex-1 py-3 px-4 bg-towskan-orange-500 hover:bg-towskan-orange-600 text-white font-bold text-xs rounded-xl shadow-md transition"
+              className="flex-1 py-3 px-4 bg-towskan-orange-500 hover:bg-towskan-orange-600 text-white font-bold text-xs rounded-xl shadow-md transition text-center"
             >
               Rastreo en Vivo
             </Link>
             <Link
               href="/menu"
-              className="py-3 px-6 border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold text-xs rounded-xl transition"
+              className="py-3 px-6 border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold text-xs rounded-xl transition text-center"
             >
               Volver al Menú
             </Link>
@@ -223,12 +221,12 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10 w-full">
-      <div className="mb-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 w-full">
+      <div className="mb-6 sm:mb-8">
         <Link href="/menu" className="text-xs font-bold text-towskan-orange-600 hover:underline mb-2 inline-block">
           ← Volver a modificar el menú
         </Link>
-        <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
           Finalizar Pedido
         </h1>
         <p className="text-xs text-gray-500 mt-1">
@@ -238,7 +236,7 @@ export default function CheckoutPage() {
 
       {/* Alerta si no está autenticado */}
       {!currentUser && authChecked && (
-        <div className="mb-8 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mb-6 sm:mb-8 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Lock className="w-5 h-5 text-amber-600 shrink-0" />
             <div>
@@ -246,16 +244,16 @@ export default function CheckoutPage() {
               <p className="text-amber-700">Se requiere una cuenta para asociar tu pedido y facturación.</p>
             </div>
           </div>
-          <div className="flex gap-2 shrink-0">
+          <div className="flex gap-2 w-full sm:w-auto shrink-0">
             <Link
               href="/login"
-              className="px-4 py-2 bg-towskan-orange-500 text-white font-bold rounded-xl text-xs"
+              className="flex-1 sm:flex-initial text-center px-4 py-2.5 sm:py-2 bg-towskan-orange-500 text-white font-bold rounded-xl text-xs"
             >
               Iniciar Sesión
             </Link>
             <Link
               href="/register"
-              className="px-4 py-2 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl text-xs"
+              className="flex-1 sm:flex-initial text-center px-4 py-2.5 sm:py-2 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl text-xs"
             >
               Crear Cuenta
             </Link>
@@ -270,60 +268,60 @@ export default function CheckoutPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmitOrder} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <form onSubmit={handleSubmitOrder} className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         
         {/* Columna Izquierda: Datos de Entrega y Pago (2 spans) */}
         <div className="lg:col-span-2 space-y-6">
           
           {/* 1. Modalidad de Entrega */}
-          <section className="p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-4">
+          <section className="p-4 sm:p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-4">
             <h2 className="text-base font-black text-gray-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-towskan-orange-500 text-white text-xs flex items-center justify-center font-bold">
+              <span className="w-6 h-6 rounded-full bg-towskan-orange-500 text-white text-xs flex items-center justify-center font-bold shrink-0">
                 1
               </span>
               <span>Modalidad de Entrega</span>
             </h2>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setTipoEntrega("domicilio")}
-                className={`p-4 rounded-2xl border text-center transition flex flex-col items-center gap-2 ${
+                className={`p-3 sm:p-4 rounded-2xl border text-center transition flex flex-col items-center gap-1.5 sm:gap-2 ${
                   tipoEntrega === "domicilio"
                     ? "border-towskan-orange-500 bg-orange-50/50 text-towskan-orange-600 shadow-sm"
                     : "border-gray-200 hover:border-orange-200 bg-white text-gray-600"
                 }`}
               >
-                <Bike className="w-6 h-6" />
-                <span className="text-xs font-black">A Domicilio</span>
+                <Bike className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="text-[11px] sm:text-xs font-black">A Domicilio</span>
                 <span className="text-[10px] text-gray-400 font-semibold">$5.000 COP</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setTipoEntrega("para llevar")}
-                className={`p-4 rounded-2xl border text-center transition flex flex-col items-center gap-2 ${
+                className={`p-3 sm:p-4 rounded-2xl border text-center transition flex flex-col items-center gap-1.5 sm:gap-2 ${
                   tipoEntrega === "para llevar"
                     ? "border-towskan-orange-500 bg-orange-50/50 text-towskan-orange-600 shadow-sm"
                     : "border-gray-200 hover:border-orange-200 bg-white text-gray-600"
                 }`}
               >
-                <ShoppingBag className="w-6 h-6" />
-                <span className="text-xs font-black">Para Llevar</span>
+                <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="text-[11px] sm:text-xs font-black">Para Llevar</span>
                 <span className="text-[10px] text-emerald-600 font-bold">Sin costo</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setTipoEntrega("en mesa")}
-                className={`p-4 rounded-2xl border text-center transition flex flex-col items-center gap-2 ${
+                className={`p-3 sm:p-4 rounded-2xl border text-center transition flex flex-col items-center gap-1.5 sm:gap-2 ${
                   tipoEntrega === "en mesa"
                     ? "border-towskan-orange-500 bg-orange-50/50 text-towskan-orange-600 shadow-sm"
                     : "border-gray-200 hover:border-orange-200 bg-white text-gray-600"
                 }`}
               >
-                <Utensils className="w-6 h-6" />
-                <span className="text-xs font-black">En Mesa</span>
+                <Utensils className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="text-[11px] sm:text-xs font-black">En Mesa</span>
                 <span className="text-[10px] text-emerald-600 font-bold">Restaurante</span>
               </button>
             </div>
@@ -341,7 +339,7 @@ export default function CheckoutPage() {
                     value={direccion}
                     onChange={(e) => setDireccion(e.target.value)}
                     placeholder="Ej: Calle 16 #9-45, Barrio Centro"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -354,7 +352,7 @@ export default function CheckoutPage() {
                       value={telefono}
                       onChange={(e) => setTelefono(e.target.value)}
                       placeholder="Ej: 300 123 4567"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
                     />
                   </div>
                   <div>
@@ -366,7 +364,7 @@ export default function CheckoutPage() {
                       value={observaciones}
                       onChange={(e) => setObservaciones(e.target.value)}
                       placeholder="Ej: Casa blanca, timbre 2"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
                     />
                   </div>
                 </div>
@@ -384,7 +382,7 @@ export default function CheckoutPage() {
                   value={numeroMesa}
                   onChange={(e) => setNumeroMesa(e.target.value)}
                   placeholder="Ej: Mesa 04 o Terraza 2"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
                 />
                 <p className="text-[11px] text-gray-400 mt-1">
                   Consulta el sticker ubicado en la esquina de tu mesa.
@@ -400,15 +398,15 @@ export default function CheckoutPage() {
           </section>
 
           {/* 2. Método de Pago */}
-          <section className="p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-4">
+          <section className="p-4 sm:p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-4">
             <h2 className="text-base font-black text-gray-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-towskan-orange-500 text-white text-xs flex items-center justify-center font-bold">
+              <span className="w-6 h-6 rounded-full bg-towskan-orange-500 text-white text-xs flex items-center justify-center font-bold shrink-0">
                 2
               </span>
               <span>Método de Pago</span>
             </h2>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setMetodoPago("nequi")}
@@ -471,7 +469,7 @@ export default function CheckoutPage() {
                 <p className="text-gray-600">
                   Envía el valor exacto de <strong>${total.toLocaleString("es-CO")} COP</strong> a la línea oficial Towskan:
                 </p>
-                <div className="p-3 bg-white rounded-xl border border-purple-200 font-mono text-sm font-bold text-purple-900 inline-block">
+                <div className="p-3 bg-white rounded-xl border border-purple-200 font-mono text-sm font-bold text-purple-900 inline-block select-all">
                   300 123 4567
                 </div>
                 <p className="text-[11px] text-gray-500">
@@ -491,11 +489,11 @@ export default function CheckoutPage() {
                     value={tarjetaNombre}
                     onChange={(e) => setTarjetaNombre(e.target.value)}
                     placeholder="Como aparece en la tarjeta"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
                   />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="sm:col-span-2">
+                <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                  <div className="sm:col-span-3">
                     <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
                       Número de Tarjeta
                     </label>
@@ -505,21 +503,21 @@ export default function CheckoutPage() {
                       value={tarjetaNumero}
                       onChange={(e) => setTarjetaNumero(e.target.value)}
                       placeholder="4500 0000 0000 0000"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
                     />
                   </div>
-                  <div>
+                  <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
                       Vencimiento / CVV
                     </label>
-                    <div className="grid grid-cols-2 gap-1.5">
+                    <div className="grid grid-cols-2 gap-2">
                       <input
                         type="text"
                         maxLength={5}
                         value={tarjetaExp}
                         onChange={(e) => setTarjetaExp(e.target.value)}
                         placeholder="MM/AA"
-                        className="px-2 py-3 text-center rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
+                        className="w-full px-2 py-3 text-center rounded-xl border border-gray-200 text-base sm:text-xs focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
                       />
                       <input
                         type="password"
@@ -527,7 +525,7 @@ export default function CheckoutPage() {
                         value={tarjetaCvv}
                         onChange={(e) => setTarjetaCvv(e.target.value)}
                         placeholder="CVV"
-                        className="px-2 py-3 text-center rounded-xl border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
+                        className="w-full px-2 py-3 text-center rounded-xl border border-gray-200 text-base sm:text-xs focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
                       />
                     </div>
                   </div>
@@ -545,7 +543,7 @@ export default function CheckoutPage() {
                   value={pagoEfectivoCon}
                   onChange={(e) => setPagoEfectivoCon(e.target.value)}
                   placeholder={`Monto superior a $${total.toLocaleString("es-CO")} COP`}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-towskan-orange-500 transition"
                 />
               </div>
             )}
@@ -555,7 +553,7 @@ export default function CheckoutPage() {
 
         {/* Columna Derecha: Resumen Financiero (1 span) */}
         <div className="space-y-6">
-          <div className="p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-4 sticky top-24">
+          <div className="p-5 sm:p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-4 lg:sticky lg:top-24">
             <h3 className="text-base font-black text-gray-900 border-b border-gray-100 pb-3">
               Resumen de la Orden
             </h3>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { orderService, Order, OrderStatus } from "@/services/orders";
 import { authService, User } from "@/services/auth";
+import { resolveProductImage, getProductEmoji } from "@/lib/productAssets";
 import {
   Clock,
   ChefHat,
@@ -25,6 +26,7 @@ export default function OrdersPage() {
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchOrders = async () => {
+    setErrorMsg(null);
     try {
       const res = await orderService.getMyOrders();
       if (res.success && res.data) {
@@ -53,35 +55,6 @@ export default function OrdersPage() {
   const handleRefresh = () => {
     setRefreshing(true);
     fetchOrders();
-  };
-
-  const resolveProductImage = (img?: string | null, name?: string | null) => {
-    if (img && img.trim()) return img;
-    if (!name) return null;
-    const n = name.toLowerCase();
-    if (n.includes("clasica") || n.includes("master")) return "/images/menu/towskan-clasica.jpg";
-    if (n.includes("doble queso") || n.includes("bacon")) return "/images/menu/doble-queso-bacon.jpg";
-    if (n.includes("smoked") || n.includes("bbq")) return "/images/menu/smoked-bbq.jpg";
-    if (n.includes("chicken") || n.includes("volcano")) return "/images/menu/chicken-crispy.jpg";
-    if (n.includes("papas rusticas") || n.includes("rústicas") || n.includes("papas")) return "/images/menu/papas-rusticas.jpg";
-    if (n.includes("salchipapa")) return "/images/menu/salchipapas.jpg";
-    if (n.includes("aros")) return "/images/menu/aros-cebolla.jpg";
-    if (n.includes("oreo")) return "/images/menu/malteada-oreo.jpg";
-    if (n.includes("arequipe")) return "/images/menu/malteada-arequipe.jpg";
-    if (n.includes("limonada") || n.includes("coco")) return "/images/menu/limonada-coco.jpg";
-    if (n.includes("gaseosa") || n.includes("coca")) return "/images/menu/gaseosa.jpg";
-    if (n.includes("salsa towskan") || n.includes("secreta")) return "/images/menu/salsa-towskan.jpg";
-    if (n.includes("cheddar")) return "/images/menu/cheddar-dip.jpg";
-    return null;
-  };
-
-  const getProductEmoji = (nombre: string) => {
-    const lower = nombre.toLowerCase();
-    if (lower.includes("hamburguesa") || lower.includes("angus") || lower.includes("bacon") || lower.includes("bbq") || lower.includes("chicken")) return "🍔";
-    if (lower.includes("acompañamiento") || lower.includes("papa") || lower.includes("salchipapa") || lower.includes("aros")) return "🍟";
-    if (lower.includes("bebida") || lower.includes("malteada") || lower.includes("limonada") || lower.includes("gaseosa")) return "🥤";
-    if (lower.includes("salsa") || lower.includes("dip") || lower.includes("cheddar")) return "🥫";
-    return "🍽️";
   };
 
   const getStatusBadge = (estado: OrderStatus) => {
@@ -121,12 +94,19 @@ export default function OrdersPage() {
             <span>Cancelado</span>
           </span>
         );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200 capitalize">
+            <Clock className="w-3.5 h-3.5" />
+            <span>{estado}</span>
+          </span>
+        );
     }
   };
 
   if (!currentUser && !loading) {
     return (
-      <div className="max-w-md mx-auto px-6 py-20 text-center">
+      <div className="max-w-md mx-auto px-4 sm:px-6 py-14 sm:py-20 text-center">
         <div className="w-16 h-16 rounded-full bg-towskan-orange-50 text-towskan-orange-500 flex items-center justify-center mx-auto mb-4">
           <Receipt className="w-8 h-8" />
         </div>
@@ -134,16 +114,16 @@ export default function OrdersPage() {
         <p className="text-xs text-gray-500 mb-8 leading-relaxed">
           Para consultar tu historial de compras y hacer seguimiento en vivo a tus pedidos, accede a tu cuenta.
         </p>
-        <div className="flex gap-3 justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href="/login"
-            className="px-6 py-3 bg-towskan-orange-500 hover:bg-towskan-orange-600 text-white font-bold text-xs rounded-xl shadow-md transition"
+            className="px-6 py-3 bg-towskan-orange-500 hover:bg-towskan-orange-600 text-white font-bold text-xs rounded-xl shadow-md transition text-center"
           >
             Iniciar Sesión
           </Link>
           <Link
             href="/register"
-            className="px-6 py-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-800 font-bold text-xs rounded-xl transition"
+            className="px-6 py-3 bg-white border border-gray-200 hover:bg-gray-50 text-gray-800 font-bold text-xs rounded-xl transition text-center"
           >
             Registrarse
           </Link>
@@ -153,13 +133,13 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10 w-full">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10 w-full">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 sm:mb-8">
         <div>
           <span className="text-xs font-black uppercase tracking-wider text-towskan-orange-500">
             Historial de Compras
           </span>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight mt-1">
+          <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight mt-1">
             Mis Pedidos
           </h1>
           <p className="text-xs text-gray-500 mt-1">
@@ -170,7 +150,7 @@ export default function OrdersPage() {
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="self-start sm:self-auto px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-sm"
+          className="self-start sm:self-auto px-4 py-2.5 sm:py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition flex items-center gap-2 shadow-sm"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
           <span>Actualizar Estados</span>
@@ -191,7 +171,7 @@ export default function OrdersPage() {
           ))}
         </div>
       ) : orders.length === 0 ? (
-        <div className="p-12 text-center bg-white rounded-3xl border border-gray-100 max-w-md mx-auto">
+        <div className="p-8 sm:p-12 text-center bg-white rounded-3xl border border-gray-100 max-w-md mx-auto">
           <div className="w-16 h-16 rounded-full bg-towskan-orange-50 text-towskan-orange-500 flex items-center justify-center mx-auto mb-4">
             <ShoppingBag className="w-8 h-8" />
           </div>
@@ -201,13 +181,13 @@ export default function OrdersPage() {
           </p>
           <Link
             href="/menu"
-            className="px-6 py-3 bg-towskan-orange-500 hover:bg-towskan-orange-600 text-white text-xs font-bold rounded-xl shadow-md transition"
+            className="inline-block px-6 py-3 bg-towskan-orange-500 hover:bg-towskan-orange-600 text-white text-xs font-bold rounded-xl shadow-md transition"
           >
             Ver Menú
           </Link>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-5 sm:space-y-6">
           {orders.map((order) => {
             const formattedDate = order.fecha_pedido
               ? new Date(order.fecha_pedido).toLocaleString("es-CO", {
@@ -219,27 +199,27 @@ export default function OrdersPage() {
             return (
               <div
                 key={order.id}
-                className="p-6 rounded-3xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition space-y-4"
+                className="p-4 sm:p-6 rounded-3xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition space-y-4"
               >
                 {/* Cabecera de la tarjeta de orden */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-towskan-orange-50 text-towskan-orange-600 flex items-center justify-center font-black text-sm">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-towskan-orange-50 text-towskan-orange-600 flex items-center justify-center font-black text-sm shrink-0">
                       #{order.id}
                     </div>
-                    <div>
-                      <h3 className="text-sm font-black text-gray-900">
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-black text-gray-900 truncate">
                         Orden #{order.id} • {order.tipo_entrega.toUpperCase()}
                       </h3>
                       <p className="text-[11px] text-gray-400">{formattedDate}</p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-3">
                     {getStatusBadge(order.estado)}
                     <Link
                       href={`/pedidos/${order.id}`}
-                      className="p-2 text-towskan-orange-600 hover:bg-orange-50 rounded-xl transition text-xs font-bold flex items-center gap-1"
+                      className="px-3 py-1.5 sm:p-2 text-towskan-orange-600 hover:bg-orange-50 rounded-xl transition text-xs font-bold flex items-center gap-1"
                     >
                       <span>Rastreo</span>
                       <ArrowRight className="w-4 h-4" />
@@ -250,8 +230,8 @@ export default function OrdersPage() {
                 {/* Lista de productos pedidos */}
                 <div className="space-y-2.5 text-xs">
                   {order.detalles?.map((det) => (
-                    <div key={det.id} className="flex justify-between items-center text-gray-700">
-                      <div className="flex items-center gap-2.5 min-w-0">
+                    <div key={det.id} className="flex justify-between items-center gap-3 text-gray-700">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         <div className="w-8 h-8 rounded-lg bg-towskan-cream-50 flex items-center justify-center shrink-0 overflow-hidden relative border border-gray-100">
                           {resolveProductImage(det.producto_imagen, det.producto_nombre) ? (
                             <img
@@ -286,8 +266,8 @@ export default function OrdersPage() {
                 </div>
 
                 {/* Resumen de totales */}
-                <div className="pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4 text-xs">
-                  <div className="flex items-center gap-4 text-gray-500">
+                <div className="pt-3 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 text-xs">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-gray-500">
                     <span>Subtotal: ${order.subtotal.toLocaleString("es-CO")}</span>
                     <span>Impuesto 8%: ${order.impuestos.toLocaleString("es-CO")}</span>
                     <span>Envío: {order.envio === 0 ? "Gratis" : `$${order.envio.toLocaleString("es-CO")}`}</span>
@@ -296,7 +276,7 @@ export default function OrdersPage() {
                     )}
                   </div>
 
-                  <div className="text-right">
+                  <div className="w-full sm:w-auto flex sm:block items-center justify-between sm:text-right pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100">
                     <span className="text-[10px] text-gray-400 uppercase tracking-wider block">Total</span>
                     <span className="text-base font-black text-towskan-orange-600">
                       ${order.total.toLocaleString("es-CO")} COP

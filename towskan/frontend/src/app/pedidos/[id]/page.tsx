@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { orderService, Order, ReceiptData, OrderStatus } from "@/services/orders";
+import { resolveProductImage, getProductEmoji } from "@/lib/productAssets";
 import {
   Clock,
   ChefHat,
@@ -40,20 +41,24 @@ export default function OrderDetailPage() {
   const [simulatorOpen, setSimulatorOpen] = useState(false);
   const [updatingState, setUpdatingState] = useState(false);
 
-  const loadOrder = async (isBackground = false) => {
+  const loadOrder = useCallback(async (isBackground = false) => {
     if (!orderId || isNaN(orderId)) {
       setErrorMsg("Identificador de pedido inválido.");
       setLoading(false);
       return;
     }
 
-    if (!isBackground) setRefreshing(true);
+    if (!isBackground) {
+      setRefreshing(true);
+      setErrorMsg(null);
+    }
 
     try {
       const res = await orderService.getById(orderId);
       if (res.success && res.data) {
         setOrder(res.data);
-      } else {
+        setErrorMsg(null);
+      } else if (!isBackground) {
         setErrorMsg(res.error || "No se encontró información del pedido solicitado.");
       }
     } catch (err: any) {
@@ -64,40 +69,11 @@ export default function OrderDetailPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
-
-  const resolveProductImage = (img?: string | null, name?: string | null) => {
-    if (img && img.trim()) return img;
-    if (!name) return null;
-    const n = name.toLowerCase();
-    if (n.includes("clasica") || n.includes("master")) return "/images/menu/towskan-clasica.jpg";
-    if (n.includes("doble queso") || n.includes("bacon")) return "/images/menu/doble-queso-bacon.jpg";
-    if (n.includes("smoked") || n.includes("bbq")) return "/images/menu/smoked-bbq.jpg";
-    if (n.includes("chicken") || n.includes("volcano")) return "/images/menu/chicken-crispy.jpg";
-    if (n.includes("papas rusticas") || n.includes("rústicas") || n.includes("papas")) return "/images/menu/papas-rusticas.jpg";
-    if (n.includes("salchipapa")) return "/images/menu/salchipapas.jpg";
-    if (n.includes("aros")) return "/images/menu/aros-cebolla.jpg";
-    if (n.includes("oreo")) return "/images/menu/malteada-oreo.jpg";
-    if (n.includes("arequipe")) return "/images/menu/malteada-arequipe.jpg";
-    if (n.includes("limonada") || n.includes("coco")) return "/images/menu/limonada-coco.jpg";
-    if (n.includes("gaseosa") || n.includes("coca")) return "/images/menu/gaseosa.jpg";
-    if (n.includes("salsa towskan") || n.includes("secreta")) return "/images/menu/salsa-towskan.jpg";
-    if (n.includes("cheddar")) return "/images/menu/cheddar-dip.jpg";
-    return null;
-  };
-
-  const getProductEmoji = (nombre: string) => {
-    const lower = nombre.toLowerCase();
-    if (lower.includes("hamburguesa") || lower.includes("angus") || lower.includes("bacon") || lower.includes("bbq") || lower.includes("chicken")) return "🍔";
-    if (lower.includes("acompañamiento") || lower.includes("papa") || lower.includes("salchipapa") || lower.includes("aros")) return "🍟";
-    if (lower.includes("bebida") || lower.includes("malteada") || lower.includes("limonada") || lower.includes("gaseosa")) return "🥤";
-    if (lower.includes("salsa") || lower.includes("dip") || lower.includes("cheddar")) return "🥫";
-    return "🍽️";
-  };
+  }, [orderId]);
 
   useEffect(() => {
     loadOrder();
-  }, [orderId]);
+  }, [loadOrder]);
 
   // Actualización reactiva automática en tiempo real (Polling cada 3s mientras esté activo)
   useEffect(() => {
@@ -110,11 +86,20 @@ export default function OrderDetailPage() {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [order?.estado, orderId]);
+  }, [order?.estado, loadOrder]);
+
+  useEffect(() => {
+    if (!receiptModalOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setReceiptModalOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [receiptModalOpen]);
 
   const handleOpenReceipt = async () => {
     setReceiptModalOpen(true);
-    if (!receiptData && orderId) {
+    if (orderId && !isNaN(orderId)) {
       setReceiptLoading(true);
       try {
         const res = await orderService.getReceipt(orderId);
@@ -229,13 +214,14 @@ export default function OrderDetailPage() {
   )}`;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-10 w-full space-y-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10 w-full space-y-6 sm:space-y-8">
       {/* Barra de cabecera */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link
             href="/pedidos"
-            className="p-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition"
+            className="p-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition shrink-0"
+            aria-label="Volver a Mis Pedidos"
           >
             <ArrowLeft className="w-4 h-4 text-gray-600" />
           </Link>
@@ -258,7 +244,7 @@ export default function OrderDetailPage() {
             href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-sm"
+            className="px-3.5 py-2.5 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-sm"
           >
             <Share2 className="w-3.5 h-3.5" />
             <span>WhatsApp Cocina</span>
@@ -266,7 +252,7 @@ export default function OrderDetailPage() {
 
           <button
             onClick={handleOpenReceipt}
-            className="px-3.5 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-sm"
+            className="px-3.5 py-2.5 sm:py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-sm"
           >
             <Receipt className="w-3.5 h-3.5 text-towskan-orange-500" />
             <span>Ver Factura</span>
@@ -275,8 +261,9 @@ export default function OrderDetailPage() {
           <button
             onClick={() => loadOrder(false)}
             disabled={refreshing}
-            className="p-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition shadow-sm"
+            className="p-2.5 sm:p-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold rounded-xl transition shadow-sm"
             title="Refrescar datos"
+            aria-label="Refrescar estado del pedido"
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
           </button>
@@ -284,7 +271,7 @@ export default function OrderDetailPage() {
           {/* Toggle de Simulador Cocina (ADSO) */}
           <button
             onClick={() => setSimulatorOpen(!simulatorOpen)}
-            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold rounded-xl transition flex items-center gap-1"
+            className="px-3 py-2.5 sm:py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold rounded-xl transition flex items-center gap-1"
             title="Panel de Demostración ADSO"
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -296,7 +283,7 @@ export default function OrderDetailPage() {
       {/* Panel Simulador de Cocina (Solo para evaluación y demo ADSO) */}
       {simulatorOpen && (
         <div className="p-4 bg-orange-50/80 border border-towskan-orange-200 rounded-2xl text-xs space-y-3">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
             <span className="font-black text-towskan-orange-700 uppercase tracking-wider text-[11px]">
               🛠️ Panel de Demostración ADSO (Control de Cocina / Despacho)
             </span>
@@ -306,21 +293,21 @@ export default function OrderDetailPage() {
             <button
               disabled={updatingState || order.estado === "preparando"}
               onClick={() => handleSimulateStatus("preparando")}
-              className="px-3 py-1.5 bg-blue-600 text-white font-bold rounded-lg disabled:opacity-40"
+              className="px-3 py-2 sm:py-1.5 bg-blue-600 text-white font-bold rounded-lg disabled:opacity-40"
             >
               1. Enviar a Cocina (preparando)
             </button>
             <button
               disabled={updatingState || order.estado === "en camino"}
               onClick={() => handleSimulateStatus("en camino")}
-              className="px-3 py-1.5 bg-purple-600 text-white font-bold rounded-lg disabled:opacity-40"
+              className="px-3 py-2 sm:py-1.5 bg-purple-600 text-white font-bold rounded-lg disabled:opacity-40"
             >
               2. Despachar a Domicilio (en camino)
             </button>
             <button
               disabled={updatingState || order.estado === "entregado"}
               onClick={() => handleSimulateStatus("entregado")}
-              className="px-3 py-1.5 bg-emerald-600 text-white font-bold rounded-lg disabled:opacity-40"
+              className="px-3 py-2 sm:py-1.5 bg-emerald-600 text-white font-bold rounded-lg disabled:opacity-40"
             >
               3. Marcar Entregado (entregado)
             </button>
@@ -329,9 +316,9 @@ export default function OrderDetailPage() {
       )}
 
       {/* Stepper de Progreso */}
-      <div className="p-8 bg-white rounded-3xl border border-gray-100 shadow-sm">
+      <div className="p-5 sm:p-8 bg-white rounded-3xl border border-gray-100 shadow-sm">
         {isCancelled ? (
-          <div className="p-6 bg-red-50 border border-red-200 rounded-2xl text-center space-y-2">
+          <div className="p-5 sm:p-6 bg-red-50 border border-red-200 rounded-2xl text-center space-y-2">
             <XCircle className="w-10 h-10 text-red-500 mx-auto" />
             <h3 className="text-base font-bold text-red-900">Este pedido fue cancelado</h3>
             <p className="text-xs text-red-600">
@@ -339,7 +326,7 @@ export default function OrderDetailPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
             {steps.map((st, idx) => {
               const Icon = st.icon;
               const isPast = currentStep > idx;
@@ -379,14 +366,14 @@ export default function OrderDetailPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
         {/* Detalle de Productos (2 cols) */}
-        <div className="md:col-span-2 p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-4">
-          <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+        <div className="md:col-span-2 p-4 sm:p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-4">
+          <div className="flex justify-between items-center gap-2 border-b border-gray-100 pb-3">
             <h3 className="text-base font-black text-gray-900">
               Platos y Bebidas Solicitados
             </h3>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-400 shrink-0">
               {order.detalles?.length || 0} referencias
             </span>
           </div>
@@ -395,10 +382,10 @@ export default function OrderDetailPage() {
             {order.detalles?.map((det) => (
               <div
                 key={det.id}
-                className="flex items-center justify-between p-3 rounded-2xl bg-gray-50/60"
+                className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-gray-50/60"
               >
-                <div className="flex items-center gap-3.5">
-                  <div className="w-14 h-14 rounded-2xl bg-towskan-cream-50 flex items-center justify-center shrink-0 overflow-hidden relative border border-gray-100 shadow-sm">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-towskan-cream-50 flex items-center justify-center shrink-0 overflow-hidden relative border border-gray-100 shadow-sm">
                     {resolveProductImage(det.producto_imagen, det.producto_nombre) ? (
                       <img
                         src={resolveProductImage(det.producto_imagen, det.producto_nombre)!}
@@ -420,8 +407,8 @@ export default function OrderDetailPage() {
                       {getProductEmoji(det.producto_nombre || "")}
                     </span>
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-gray-900">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-gray-900 truncate">
                       {det.producto_nombre || `Producto #${det.producto_id}`}
                     </p>
                     <p className="text-[11px] text-gray-400">
@@ -429,7 +416,7 @@ export default function OrderDetailPage() {
                     </p>
                   </div>
                 </div>
-                <span className="text-xs font-black text-gray-900">
+                <span className="text-xs font-black text-gray-900 shrink-0">
                   ${det.subtotal.toLocaleString("es-CO")} COP
                 </span>
               </div>
@@ -437,21 +424,21 @@ export default function OrderDetailPage() {
           </div>
 
           <div className="pt-4 border-t border-gray-100 space-y-1.5 text-xs text-gray-600">
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-2">
               <span>Subtotal:</span>
               <span className="font-semibold text-gray-800">${order.subtotal.toLocaleString("es-CO")} COP</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-2">
               <span>Impuesto Nacional al Consumo (8%):</span>
               <span className="font-semibold text-gray-800">${order.impuestos.toLocaleString("es-CO")} COP</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-2">
               <span>Costo de Envío:</span>
               <span className="font-semibold text-gray-800">
                 {order.envio === 0 ? "Gratis" : `$${order.envio.toLocaleString("es-CO")} COP`}
               </span>
             </div>
-            <div className="pt-2 border-t border-gray-200 flex justify-between text-base font-black text-gray-900">
+            <div className="pt-2 border-t border-gray-200 flex justify-between gap-2 text-base font-black text-gray-900">
               <span>Total Cancelado:</span>
               <span className="text-towskan-orange-600">${order.total.toLocaleString("es-CO")} COP</span>
             </div>
@@ -459,14 +446,14 @@ export default function OrderDetailPage() {
 
           {/* Botón de Cancelación (Fase 4: Solo disponible si estado es 'pendiente') */}
           {order.estado === "pendiente" && (
-            <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+            <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <span className="text-[11px] text-gray-400">
                 ¿Deseas cancelar antes de entrar a cocina?
               </span>
               <button
                 onClick={handleCancelOrder}
                 disabled={cancelling}
-                className="px-3.5 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200 rounded-xl transition"
+                className="self-start sm:self-auto px-3.5 py-2 sm:py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200 rounded-xl transition"
               >
                 {cancelling ? "Cancelando..." : "Cancelar Pedido"}
               </button>
@@ -475,9 +462,9 @@ export default function OrderDetailPage() {
         </div>
 
         {/* Información Operativa y Pagos (1 col) */}
-        <div className="space-y-6">
+        <div className="space-y-5 sm:space-y-6">
           {/* Tarjeta Modalidad */}
-          <div className="p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-3 text-xs">
+          <div className="p-5 sm:p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-3 text-xs">
             <h4 className="font-black text-gray-900 uppercase tracking-wider text-[11px]">
               Modalidad de Consumo
             </h4>
@@ -502,7 +489,7 @@ export default function OrderDetailPage() {
           </div>
 
           {/* Tarjeta Pagos */}
-          <div className="p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-3 text-xs">
+          <div className="p-5 sm:p-6 bg-white rounded-3xl border border-gray-100 shadow-sm space-y-3 text-xs">
             <h4 className="font-black text-gray-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
               <CreditCard className="w-3.5 h-3.5 text-towskan-orange-500" />
               <span>Transacciones de Pago</span>
@@ -537,22 +524,23 @@ export default function OrderDetailPage() {
 
       {/* Modal de Factura / Comprobante Digital (Fase 4) */}
       {receiptModalOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col">
-            <div className="p-4 bg-towskan-orange-500 text-white flex justify-between items-center">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-lg max-h-[90vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+            <div className="p-4 bg-towskan-orange-500 text-white flex justify-between items-center shrink-0">
               <span className="font-black text-sm flex items-center gap-2">
                 <Receipt className="w-4 h-4" />
                 <span>Factura / Comprobante Digital</span>
               </span>
               <button
                 onClick={() => setReceiptModalOpen(false)}
-                className="p-1 text-white/80 hover:text-white rounded-lg"
+                className="p-1.5 text-white/80 hover:text-white rounded-lg"
+                aria-label="Cerrar factura"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto max-h-[75vh] space-y-4 text-xs font-mono text-gray-700">
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4 text-xs font-mono text-gray-700">
               {receiptLoading ? (
                 <div className="py-12 text-center text-gray-400">Generando comprobante fiscal...</div>
               ) : receiptData ? (
@@ -566,44 +554,44 @@ export default function OrderDetailPage() {
                     <p className="text-[10px] text-gray-500">{receiptData.establecimiento.regimen}</p>
                   </div>
 
-                  <div className="flex justify-between border-b border-dashed border-gray-300 pb-2">
+                  <div className="flex flex-col sm:flex-row justify-between gap-2 border-b border-dashed border-gray-300 pb-2">
                     <div>
                       <p><strong>Factura:</strong> {receiptData.factura.numero_factura}</p>
                       <p><strong>Fecha:</strong> {receiptData.factura.fecha_formateada}</p>
                     </div>
-                    <div className="text-right">
+                    <div className="sm:text-right">
                       <p><strong>Cliente:</strong> {receiptData.factura.cliente.nombre}</p>
                       <p><strong>Modalidad:</strong> {receiptData.factura.servicio.tipo_entrega.toUpperCase()}</p>
                     </div>
                   </div>
 
                   <div className="space-y-1.5 border-b border-dashed border-gray-300 pb-3">
-                    <div className="flex justify-between font-bold text-gray-900">
+                    <div className="flex justify-between gap-2 font-bold text-gray-900">
                       <span>Cant • Descripción</span>
-                      <span>Total</span>
+                      <span className="shrink-0">Total</span>
                     </div>
                     {receiptData.factura.items.map((it, i) => (
-                      <div key={i} className="flex justify-between">
-                        <span>{it.cantidad}x {it.descripcion}</span>
-                        <span>${it.subtotal.toLocaleString("es-CO")}</span>
+                      <div key={i} className="flex justify-between gap-2">
+                        <span className="min-w-0 break-words">{it.cantidad}x {it.descripcion}</span>
+                        <span className="shrink-0">${it.subtotal.toLocaleString("es-CO")}</span>
                       </div>
                     ))}
                   </div>
 
                   <div className="space-y-1 border-b border-dashed border-gray-300 pb-3">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between gap-2">
                       <span>Subtotal Gravado:</span>
                       <span>${receiptData.factura.totales.subtotal.toLocaleString("es-CO")}</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between gap-2">
                       <span>Impoconsumo (8%):</span>
                       <span>${receiptData.factura.totales.impoconsumo_8.toLocaleString("es-CO")}</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between gap-2">
                       <span>Costo de Envío:</span>
                       <span>${receiptData.factura.totales.envio.toLocaleString("es-CO")}</span>
                     </div>
-                    <div className="flex justify-between font-black text-sm text-gray-900 pt-1">
+                    <div className="flex justify-between gap-2 font-black text-sm text-gray-900 pt-1">
                       <span>TOTAL A PAGAR:</span>
                       <span>${receiptData.factura.totales.total.toLocaleString("es-CO")} COP</span>
                     </div>
@@ -618,19 +606,19 @@ export default function OrderDetailPage() {
               )}
             </div>
 
-            <div className="p-4 bg-gray-50 border-t border-gray-100 flex gap-2">
+            <div className="p-4 bg-gray-50 border-t border-gray-100 flex flex-col-reverse sm:flex-row gap-2 shrink-0">
+              <button
+                onClick={() => setReceiptModalOpen(false)}
+                className="px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-100"
+              >
+                Cerrar
+              </button>
               <button
                 onClick={() => window.print()}
                 className="flex-1 py-2.5 px-4 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2"
               >
                 <Printer className="w-4 h-4" />
                 <span>Imprimir Factura</span>
-              </button>
-              <button
-                onClick={() => setReceiptModalOpen(false)}
-                className="px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-100"
-              >
-                Cerrar
               </button>
             </div>
           </div>

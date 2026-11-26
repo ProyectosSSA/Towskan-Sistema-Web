@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Product } from "@/services/products";
-import { DeliveryType, orderService, QuoteResult } from "@/services/orders";
+import { DeliveryType } from "@/services/orders";
 
 export interface CartItem {
   product: Product;
@@ -48,10 +48,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     try {
       const stored = localStorage.getItem("towskan_cart");
       if (stored) {
-        setItems(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setItems(
+            parsed.filter(
+              (item) =>
+                item &&
+                item.product &&
+                typeof item.product.id === "number" &&
+                typeof item.quantity === "number" &&
+                item.quantity > 0
+            )
+          );
+        }
       }
-      const storedTipo = localStorage.getItem("towskan_tipo_entrega") as DeliveryType;
-      if (storedTipo) {
+      const storedTipo = localStorage.getItem("towskan_tipo_entrega") as DeliveryType | null;
+      if (storedTipo && ["domicilio", "para llevar", "en mesa"].includes(storedTipo)) {
         setTipoEntrega(storedTipo);
       }
       const storedMesa = localStorage.getItem("towskan_numero_mesa");

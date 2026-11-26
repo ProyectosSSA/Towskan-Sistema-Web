@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
+import { resolveProductImage, getProductEmoji } from "@/lib/productAssets";
 import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight, Utensils, Bike, ShoppingCart } from "lucide-react";
 
 export function CartDrawer() {
@@ -20,22 +22,31 @@ export function CartDrawer() {
     removeItem,
   } = useCart();
 
+  useEffect(() => {
+    if (!isCartOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeCart();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isCartOpen, closeCart]);
+
   if (!isCartOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <div className="fixed inset-0 z-50 overflow-hidden" role="dialog" aria-modal="true" aria-label="Carrito de compras">
       {/* Backdrop oscuro */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
         onClick={closeCart}
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
+        <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col h-full">
           {/* Header del carrito */}
-          <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-towskan-cream-50">
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-towskan-orange-500 text-white flex items-center justify-center font-bold">
+          <div className="p-4 sm:p-6 border-b border-gray-100 flex items-center justify-between bg-towskan-cream-50">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-towskan-orange-500 text-white flex items-center justify-center font-bold shrink-0">
                 <ShoppingBag className="w-5 h-5" />
               </div>
               <div>
@@ -45,7 +56,7 @@ export function CartDrawer() {
             </div>
             <button
               onClick={closeCart}
-              className="p-2 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
+              className="p-2 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition min-w-[40px] min-h-[40px] flex items-center justify-center"
               aria-label="Cerrar carrito"
             >
               <X className="w-5 h-5" />
@@ -54,15 +65,15 @@ export function CartDrawer() {
 
           {/* Modalidad de entrega */}
           {items.length > 0 && (
-            <div className="px-6 py-3 bg-gray-50 border-b border-gray-100">
+            <div className="px-4 sm:px-6 py-3 bg-gray-50 border-b border-gray-100">
               <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block mb-2">
                 Modalidad de entrega
               </span>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                 <button
                   type="button"
                   onClick={() => setTipoEntrega("domicilio")}
-                  className={`py-2 px-2 rounded-xl text-xs font-bold flex flex-col items-center gap-1 transition border ${
+                  className={`py-2 px-1.5 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex flex-col items-center gap-1 transition border ${
                     tipoEntrega === "domicilio"
                       ? "bg-towskan-orange-500 text-white border-towskan-orange-500 shadow-sm"
                       : "bg-white text-gray-600 border-gray-200 hover:bg-gray-100"
@@ -74,7 +85,7 @@ export function CartDrawer() {
                 <button
                   type="button"
                   onClick={() => setTipoEntrega("para llevar")}
-                  className={`py-2 px-2 rounded-xl text-xs font-bold flex flex-col items-center gap-1 transition border ${
+                  className={`py-2 px-1.5 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex flex-col items-center gap-1 transition border ${
                     tipoEntrega === "para llevar"
                       ? "bg-towskan-orange-500 text-white border-towskan-orange-500 shadow-sm"
                       : "bg-white text-gray-600 border-gray-200 hover:bg-gray-100"
@@ -86,7 +97,7 @@ export function CartDrawer() {
                 <button
                   type="button"
                   onClick={() => setTipoEntrega("en mesa")}
-                  className={`py-2 px-2 rounded-xl text-xs font-bold flex flex-col items-center gap-1 transition border ${
+                  className={`py-2 px-1.5 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold flex flex-col items-center gap-1 transition border ${
                     tipoEntrega === "en mesa"
                       ? "bg-towskan-orange-500 text-white border-towskan-orange-500 shadow-sm"
                       : "bg-white text-gray-600 border-gray-200 hover:bg-gray-100"
@@ -100,9 +111,9 @@ export function CartDrawer() {
           )}
 
           {/* Contenido: Lista de productos */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
             {items.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center p-8">
+              <div className="h-full flex flex-col items-center justify-center text-center p-6 sm:p-8">
                 <div className="w-16 h-16 rounded-full bg-towskan-orange-50 text-towskan-orange-500 flex items-center justify-center mb-4">
                   <ShoppingCart className="w-8 h-8" />
                 </div>
@@ -119,16 +130,18 @@ export function CartDrawer() {
                 </Link>
               </div>
             ) : (
-              items.map(({ product, quantity }) => (
+              items.map(({ product, quantity }) => {
+                const imgSrc = resolveProductImage(product.imagen, product.nombre);
+                return (
                 <div
                   key={product.id}
-                  className="p-3.5 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center justify-between gap-3 hover:border-orange-200 transition"
+                  className="p-3 sm:p-3.5 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-wrap min-[380px]:flex-nowrap items-center justify-between gap-2.5 sm:gap-3 hover:border-orange-200 transition"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                     <div className="w-12 h-12 rounded-xl bg-orange-100 text-towskan-orange-600 flex items-center justify-center font-black text-lg shrink-0 overflow-hidden relative">
-                      {product.imagen ? (
+                      {imgSrc ? (
                         <img
-                          src={product.imagen}
+                          src={imgSrc}
                           alt={product.nombre}
                           className="w-full h-full object-cover"
                           onError={(e) => {
@@ -140,12 +153,12 @@ export function CartDrawer() {
                       ) : null}
                       <span
                         className="w-full h-full flex items-center justify-center"
-                        style={{ display: product.imagen ? "none" : "flex" }}
+                        style={{ display: imgSrc ? "none" : "flex" }}
                       >
-                        🍔
+                        {getProductEmoji(product.nombre)}
                       </span>
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <h4 className="text-xs font-bold text-gray-900 truncate">
                         {product.nombre}
                       </h4>
@@ -158,22 +171,24 @@ export function CartDrawer() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
                     <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
                       <button
                         onClick={() => updateQuantity(product.id, -1)}
-                        className="p-1 hover:bg-gray-200 text-gray-600 transition"
+                        className="p-1.5 hover:bg-gray-200 text-gray-600 transition min-w-[28px] min-h-[28px] flex items-center justify-center"
                         title="Disminuir"
+                        aria-label="Disminuir cantidad"
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
-                      <span className="px-2 text-xs font-bold text-gray-800">
+                      <span className="px-2 text-xs font-bold text-gray-800 min-w-[22px] text-center">
                         {quantity}
                       </span>
                       <button
                         onClick={() => updateQuantity(product.id, 1)}
-                        className="p-1 hover:bg-gray-200 text-gray-600 transition"
+                        className="p-1.5 hover:bg-gray-200 text-gray-600 transition min-w-[28px] min-h-[28px] flex items-center justify-center"
                         title="Aumentar"
+                        aria-label="Aumentar cantidad"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
@@ -181,20 +196,22 @@ export function CartDrawer() {
 
                     <button
                       onClick={() => removeItem(product.id)}
-                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition min-w-[30px] min-h-[30px] flex items-center justify-center"
                       title="Eliminar del pedido"
+                      aria-label="Eliminar producto"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
 
           {/* Footer de totales y Checkout */}
           {items.length > 0 && (
-            <div className="p-6 border-t border-gray-100 bg-towskan-cream-50 space-y-3">
+            <div className="p-4 sm:p-6 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-6 border-t border-gray-100 bg-towskan-cream-50 space-y-3">
               <div className="space-y-1.5 text-xs text-gray-600">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
